@@ -7,6 +7,7 @@ from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
 from time import  sleep
 import demjson
+from DB import DB
 
 
 class Browser(object):
@@ -21,9 +22,14 @@ class Browser(object):
         - upvote other peoples yaks.
     '''
 
+    popular_schools_arr = []
+
+
     def __init__(self):
-        self.browser = webdriver.Firefox()
+        self.browser = webdriver.Chrome()
         self.browser.get("https://www.yikyak.com/nearby")
+
+        self.db = DB()
 
     def login(self):
         current_url = self.browser.current_url
@@ -37,12 +43,15 @@ class Browser(object):
             # TODO: add an exception, if the number entered is not accepted by the website
             self.browser.find_element_by_xpath("//*[@id=\"app\"]/div/div/div/div[2]/div/div/span/div/div/div/form/"
                                                "div[3]/button").click()
+
             self.browser.find_element_by_xpath(
                 "//*[@id=\"app\"]/div/div/div/div[2]/div/div/span/div/div/div/form/div[2]"
                 "/button").click()
+            sleep(1)  # if this is not here it throws an eror when adding the pin
             # TODO: add an exceptiion for the pin not being accepted
             pin = raw_input("please input the 6 digit authenticate web pin: ")
             self.browser.find_element_by_xpath("//*[@id=\"pin\"]").send_keys(pin)
+            sleep(1)  # if this is not here it throws an eror when adding the pin
             self.browser.find_element_by_xpath(
                 "//*[@id=\"app\"]/div/div/div/div[2]/div/div/span/div/div/div/form/div[2]/"
                 "button").click()
@@ -94,10 +103,19 @@ class Browser(object):
                             # get the the string in the p tag.
 
             print "yak: " + yak + "\ttotal Likes: " + str(likes) + "\t has image:" + includesImage
-
             # send the data to the database using the database class.
 
+            if includesImage:
+                self.db.add_yak(yak, 'add teh image url here', likes)
+            else:
+                self.db.add_yak(yak, "null", likes)
 
+
+
+    # def get_locations_top_yaks(self):
+    #
+    #     for school in self.popular_schools_arr:
+    #         self.browser.get(school)
 
 
 
