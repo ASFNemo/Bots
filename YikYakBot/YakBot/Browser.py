@@ -7,7 +7,7 @@ from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
 from time import  sleep
 import demjson
-from DB import DB
+#from DB import DB
 
 
 class Browser(object):
@@ -22,14 +22,16 @@ class Browser(object):
         - upvote other peoples yaks.
     '''
 
+    popular_schools_dict = {"Texas A&M": "https://www.yikyak.com/herds/105150", "The University of Southampton": ""}
     popular_schools_arr = []
 
 
     def __init__(self):
+        self.uniLinksFile = open("uni_links.txt", "r+")
         self.browser = webdriver.Chrome()
         self.browser.get("https://www.yikyak.com/nearby")
 
-        self.db = DB()
+        #self.db = DB()
 
     def login(self):
         current_url = self.browser.current_url
@@ -69,9 +71,14 @@ class Browser(object):
         # or any that has avaraged over 65 upvotes per hours
 
         self.browser.get("https://www.yikyak.com/herds/104473")
-        sleep(1)
-        self.browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        sleep(1)
+        sleep(4)
+        i = 0
+        while i < 15:
+            self.browser.execute_script("window.scrollTo(5, document.body.scrollHeight);")
+            i += 1
+            sleep(1)
+
+        sleep(4)
         page_source = BeautifulSoup(self.browser.page_source, "html.parser")
 
         #for divs in page_source.find_all("div"):
@@ -85,8 +92,12 @@ class Browser(object):
             includesImage = False
 
             messageDiv = tag.find_all("div", {"class": "message"})
-            likes = tag.find_all("div", {"class": "like-md"}).getText()
+            likes = tag.find_all("div", {"class": "likes"})
 
+            for l in likes:
+                totalLike = l.text
+
+            j = 0
             for div in messageDiv:
 
                 for div in messageDiv:
@@ -95,30 +106,77 @@ class Browser(object):
                     for child in children:
                         classTag = child.get('class', [])
 
-                        if classTag[0] == "content-image-container":
+                        if classTag == "content-image-container":
                             includesImage = True
                         # go to next div and download
                         else:
                             yak = child.getText()
                             # get the the string in the p tag.
 
-            print "yak: " + yak + "\ttotal Likes: " + str(likes) + "\t has image:" + includesImage
+
+            print "yak: " + yak + "\ttotal Likes: " + str(totalLike) + "\t has image:" + str(includesImage)
             # send the data to the database using the database class.
 
-            if includesImage:
-                self.db.add_yak(yak, 'add teh image url here', likes)
-            else:
-                self.db.add_yak(yak, "null", likes)
+            # if includesImage:
+            #     self.db.add_yak(yak, 'add teh image url here', likes)
+            # else:
+            #     self.db.add_yak(yak, "null", likes)
+            
+    def get_locations_top_yaks(self, url):
 
+        # go to the top yaks page and scroll a few times, get any yak that has reached over 300 upvotes
+        # or any that has avaraged over 65 upvotes per hours
 
+        self.browser.get(url)
+        sleep(4)
+        i = 0
+        while i < 15:
+            self.browser.execute_script("window.scrollTo(5, document.body.scrollHeight);")
+            i += 1
+            sleep(1)
 
-    # def get_locations_top_yaks(self):
-    #
-    #     for school in self.popular_schools_arr:
-    #         self.browser.get(school)
+        sleep(4)
+        page_source = BeautifulSoup(self.browser.page_source, "html.parser")
 
+        #for divs in page_source.find_all("div"):
+         #   divClass = divs.get('class')
+          #  if divClass == "message-main":
 
+        divTag = page_source.find_all("div", {"class": "message-main"})
 
+        for tag in divTag:
+
+            includesImage = False
+
+            messageDiv = tag.find_all("div", {"class": "message"})
+            likes = tag.find_all("div", {"class": "likes"})
+
+            for l in likes:
+                totalLike = l.text
+
+            j = 0
+            for div in messageDiv:
+
+                for div in messageDiv:
+                    children = div.findChildren()
+
+                    for child in children:
+                        classTag = child.get('class', [])
+
+                        if classTag == "content-image-container":
+                            includesImage = True
+                        # go to next div and download
+                        else:
+                            yak = child.getText()
+                            # get the the string in the p tag.
+
+            print "yak: " + yak + "\ttotal Likes: " + str(totalLike) + "\t has image:" + str(includesImage)
+
+    def fill_uni_dict(self):
+        for line in self.uniLinksFile:
+            arr = line.split(";")
+            self.popular_schools_dict[arr[0]] = arr[1]
+            self.popular_schools_arr.append(arr[0])
 
 
 #//*[@id="app"]/div/div/div/div/div[3]/div/div/div[2]/div/div[2]/div/div/div[47]/div[1]/div[1]/div[1]/div[2]/div/div/div
