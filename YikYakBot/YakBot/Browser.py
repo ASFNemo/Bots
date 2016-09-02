@@ -29,6 +29,7 @@ class Browser(object):
     def __init__(self):
         self.uniLinksFile = open("uni_links.txt", "r+")
         self.browser = webdriver.Chrome()
+        #self.browser = webdriver.PhantomJS()
         self.browser.get("https://www.yikyak.com/nearby")
 
         #self.db = DB()
@@ -121,7 +122,7 @@ class Browser(object):
             #     self.db.add_yak(yak, 'add teh image url here', likes)
             # else:
             #     self.db.add_yak(yak, "null", likes)
-            
+
     def get_locations_top_yaks(self, url):
 
         # go to the top yaks page and scroll a few times, get any yak that has reached over 300 upvotes
@@ -177,6 +178,26 @@ class Browser(object):
             arr = line.split(";")
             self.popular_schools_dict[arr[0]] = arr[1]
             self.popular_schools_arr.append(arr[0])
+
+    def add_uni_to_list(self):
+        page_source = BeautifulSoup(self.browser.page_source, "html.parser")
+
+        heard_link_div = page_source.find_all("div", {"class": "herd-list-item"})
+
+        for child in heard_link_div.findChildren():
+            link = child.get('href')
+            print link
+
+            for link_child in child.findChildren():
+                string = link_child.text
+
+        arr = string.splt(": ")
+        self.popular_schools_dict[arr[1]] = link
+        self.popular_schools_arr.append(arr[1])
+
+        self.uniLinksFile.write("\n"+arr[1]+";"+link)
+
+
 
 
 #//*[@id="app"]/div/div/div/div/div[3]/div/div/div[2]/div/div[2]/div/div/div[47]/div[1]/div[1]/div[1]/div[2]/div/div/div
