@@ -7,6 +7,7 @@ from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
 from time import  sleep
 import demjson
+from Send_Yak import Send_Yak
 #from DB import DB
 
 
@@ -27,6 +28,7 @@ class Browser(object):
 
 
     def __init__(self):
+        self.socket = Send_Yak()
         self.uniLinksFile = open("uni_links.txt", "r+")
         self.browser = webdriver.Chrome()
         #self.browser = webdriver.PhantomJS()
@@ -100,22 +102,28 @@ class Browser(object):
 
             j = 0
             for div in messageDiv:
+                children = div.findChildren()
+                image = 'null'
+                for child in children:
+                    classTag = child.get('class', [])
 
-                for div in messageDiv:
-                    children = div.findChildren()
+                    if classTag == "content-image-container":
+                        print "============= There is an image here"
+                        another_chiild = child.findChildren()
+                        for nextChild in another_chiild:
+                            style = nextChild.getAttribute('style')
 
-                    for child in children:
-                        classTag = child.get('class', [])
-
-                        if classTag == "content-image-container":
-                            includesImage = True
-                        # go to next div and download
-                        else:
-                            yak = child.getText()
-                            # get the the string in the p tag.
+                            style_arr= style.split("l(\"")
+                            image = style_arr[1][:-3]
 
 
-            print "yak: " + yak + "\ttotal Likes: " + str(totalLike) + "\t has image:" + str(includesImage)
+                    # go to next div and download
+                    else:
+                        yak = child.getText()
+                        # get the the string in the p tag.
+
+            self.socket.send_Yak(yak, totalLike, image)
+            print "yak: " + yak + "\ttotal Likes: " + str(totalLike) + "\t has image:" + image
             # send the data to the database using the database class.
 
             # if includesImage:
@@ -156,22 +164,29 @@ class Browser(object):
                 totalLike = l.text
 
             j = 0
+
             for div in messageDiv:
+                children = div.findChildren()
+                image = 'null'
+                for child in children:
+                    classTag = child.get('class', [])
 
-                for div in messageDiv:
-                    children = div.findChildren()
+                    if classTag == "content-image-container":
+                        print "============= There is an image here"
+                        another_chiild = child.findChildren()
+                        for nextChild in another_chiild:
+                            style = nextChild.getAttribute('style')
 
-                    for child in children:
-                        classTag = child.get('class', [])
+                            style_arr= style.split("l(\"")
+                            image = style_arr[1][:-3]
 
-                        if classTag == "content-image-container":
-                            includesImage = True
-                        # go to next div and download
-                        else:
-                            yak = child.getText()
-                            # get the the string in the p tag.
 
-            print "yak: " + yak + "\ttotal Likes: " + str(totalLike) + "\t has image:" + str(includesImage)
+                    # go to next div and download
+                    else:
+                        yak = child.getText()
+                        # get the the string in the p tag.
+
+            print "yak: " + yak + "\ttotal Likes: " + str(totalLike) + "\t has image:" + image
 
     def fill_uni_dict(self):
         for line in self.uniLinksFile:

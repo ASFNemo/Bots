@@ -10,5 +10,6 @@ sleep(2)
 thisbrowser.login()
 sleep(10)
 thisbrowser.get_world_top_yaks()
+# thisbrowser.add_uni_to_list()
 
 
